@@ -1,0 +1,871 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>New Case</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store">
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+     <!-- style for multipleselect -->
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/multiple-select/1.2.3/multiple-select.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/multiple-select/1.2.3/multiple-select.min.js"></script>
+
+</head>
+<style type="text/css">
+    .banner {
+        position: absolute;
+        background-image: none;
+        background-color: rgb(0, 102, 164);
+        height: 75px;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+    }
+
+    .header {
+        position: absolute;
+        font-size: 32px;
+        font-weight: 700;
+        font-family: "Calibri", "Arial";
+        text-align: center;
+        height: 46px;
+        transform-origin: 357.5px 28.2787px 0px;
+        top: 50px;
+        width: 260px;
+        left: 40%;
+    }
+
+    .nsre_icon {
+        position: absolute;
+        height: 48px;
+        top: 85px;
+        width: 48px;
+        left: 80%;
+    }
+
+    .master_font {
+        font-family: "Calibri", "Arial";
+
+    }
+
+    .form {
+        position: absolute;
+        top: 150px;
+        width: 98%;
+    }
+
+    .ligitation-app .ms-drop {
+        width: auto;
+        min-width: 100%;
+    }
+</style>
+
+<script type="text/javascript">
+    function validateForm() {
+        var x = document.forms["newCaseForm"]["FullName"].value;
+        var y = document.forms["newCaseForm"]["Party"].value;
+        var z = document.forms["newCaseForm"]["status"].value;
+        var a = document.forms["newCaseForm"]["Filed"].value;
+        var b = document.forms["newCaseForm"]["court"].value;
+        var c = document.forms["newCaseForm"]["Plaintiff_Defendant"].value;
+        if (x == false) {
+            alert("Full Name cannot be blank");
+            return false;
+        } else if (y == false) {
+            alert(" Party cannot be blank");
+            return false;
+        } else if (z == false) {
+            alert("Case Status cannot be blank");
+            return false;
+        } else if (b == false) {
+            alert("Jurisdiction cannot be blank");
+            return false;
+        } else if (c == false) {
+            alert("Plaintiff/Defendant cannot be blank");
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
+    function submitForm() {
+
+        if(confirm("Are you sure you want to submit?")){
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "", false);
+        xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+        var array_data = $("#newCaseForm").serializeArray();
+        var formData = JSON.stringify(array_data);//get this part to take multiform data
+        var json_obj =[];
+        console.log("array form data: ");
+        for(var i = 0; i < array_data.length;i++){
+            var node = {
+                "name":array_data[i].name,
+                "value":array_data[i].value
+            };
+            //write to json. If key has a val, add to key so both are sent to dynamo
+            //console.log("name: "+array_data[i].name+" value: "+array_data[i].value);
+            json_obj.push(node);
+        }
+
+        //Append Case ID to sent data for update page, prevents
+        //duplicate cases in the database.
+        if(!document.getElementById("caseID")){  
+        } else {
+            var caseIDNode = {
+                "name": "Case ID",
+                "value": document.getElementById("caseID").innerHTML
+            };
+            json_obj.push(caseIDNode);
+        }
+
+        var data_to_send = JSON.stringify(json_obj);
+        console.log(data_to_send);
+        //console.log("json form data: " + formData);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+
+                //alert(xhr.responseText);
+            }
+        }
+        if (validateForm()) {
+            xhr.send(data_to_send);
+            //xhr.send(json);
+            alert("Case Submitted");
+            window.close();
+        }
+
+        } else {
+            return;
+        }
+        
+    }
+</script>
+
+<body class="ligitation-app">
+    <div class="banner" style="box-shadow: lightgrey 0px 1em 1em;"></div>
+    <p class="header">Create New Case</p>
+    <a href="" id="Nsre_icon" class="icon">
+        <img src="assets/nsre_icon.png" class="nsre_icon"></a>
+    <form class="form" id="newCaseForm" name="newCaseForm" method="post" enctype="multipart/form-data"
+        onsubmit="return validateForm()">
+        <div class="master_font">
+            <fieldset>
+                <legend>
+                    General Information
+                </legend>
+                <label for="FullName"><b>*Full Name:</b></label><br>
+                <textarea name="FullName" id="FullName" style="width: 300px; height: 100px;"
+                    autocomplete="off"></textarea><br>
+                <label for="ShortName"><b>Short Name:</b></label><br>
+                <textarea name="Short Name" id="Short Name" style="width: 300px; height: 100px;"
+                    autocomplete="off"></textarea><br>
+                <label for="Filed"><b>*Filing Date:</b></label>
+                <input type="date" name="Filed" id="Filed"><br>
+
+                <!-- Jurisdiction 3 parts drop down: state name, state/federal, court Name,  -->
+
+                <label for="Jurisdiction"><b>*Jurisdiction:</b></label>
+                <select name="state" id="state" class="form-control input-lg" multiple>
+                    <option value="">Select State</option>
+                </select>
+
+                <select name="state_federal" id="state_federal" class="form-control input-lg" multiple>
+                    <option value="">Select State/Federal</option>
+                </select>
+
+                <select name="court" id="court" class="form-control input-lg" multiple>
+                    <option value="">Select Court</option>
+                </select>
+                <br>
+
+                <label for="Party" class="labels"><b>* Party:</b></label>
+                <!--Add ability to edit json on Backend 1st-->
+                <select name="Party" id="party" class="party_form-control" multiple="multiple">
+                    <option value="">Select Party</option>
+                </select><br>
+
+                <label for="Plaintiff_Defendant" class="labels"><b>*Plaintiff or Defendant:</b></label>
+                <select name="Plaintiff_Defendant" id="Plaintiff_Defendant" multiple="multiple">
+                    <option value="Plaintiff">Plaintiff</option>
+                    <option value="Defendant">Defendant</option>
+                </select><br>
+
+                <label for="Matter Type" class="labels"><b>Matter Type:</b></label>
+                <select class="Litigation_Conflict" name="Litigation_Conflict" id="Litigation_Conflict"
+                    multiple="multiple">
+                    <!--<option value="Litigation">Litigation</option>
+                 <option value="Pre-Litigation">Pre-Litigation</option>
+                 <option value="Regulatory">Regulatory</option>
+                 <option value="Miscellaneous">Miscellaneous</option>
+                 <option value="Claims">Claims</option>-->
+                </select><br>
+
+                <label for="Category" class="labels"><b>Category:</b></label>
+                <select id="Category" name="Category" multiple="multiple">
+                </select>
+
+                <label for="Sub_Category" class="labels"><b>Sub Category:</b></label>
+                <select id="sub_Category" name="Sub Category" multiple="multiple">
+                </select><br>
+
+                <label for="Short_des" class="labels"><b>Short Case Description:</b></label><br>
+                <textarea name="Short_des" id="Short description" style="width: 600px; height: 40px;" autocomplete="off"></textarea><br>
+
+                <label for="Resolution"><b>Resolution:</b></label><br>
+                <textarea name="Resolution" id="Resolution" style="width: 300px; height: 100px;" autocomplete="off"></textarea><br>
+
+                <label for="close_date"><b>Closing Date:</b></label>
+                <input type="date" name="Close Date" id="close_date"><br>
+
+            </fieldset>
+            <fieldset>
+                <legend class="labels">
+                    Detailed Information
+                </legend>
+
+                <label for="Significant matter"><b>Significant Matter:</b></label>
+                <select name="Significant" id="Significant" multiple="multiple">
+                    <option value="Yes">Yes</option>
+                    <option value="No"CT>No</option>
+                </select><br>
+
+                <label for="status"><b>*Case Status:</b></label>
+                <select name="status" id="status" multiple="multiple">
+                    <option value="Open">Open</option>
+                    <option value="Closed">Closed</option>
+                </select><br>
+
+                <label for="Case Number"><b>Case Number:</b></label>
+                <input type="text" name="Case Number" id="Case Number" autocomplete="off"><br>
+                <label for="service_date"><b>Service Date:</b></label>
+                <input type="date" name="Service Date" id="service_date"><br>
+
+                <label for="Business_Contact"><b>Business Contact:</b></label>
+                <input type="text" name="Business_Contact" id="Business_Contact"><br>
+
+                <label for="Description"><b>Full Case Description:</b></label><br>
+                <textarea name="Description" id="Full Case" style="width: 600px; height: 60px;" autocomplete="off"></textarea><br>
+
+                <label for="Policy Number"><b>Policy Number:</b></label>
+                <input type="text" name="policyNo" autocomplete="off" id="policyNo"></textarea><br>
+
+                <label for="status"><b>Current Status:</b></label><br>
+                <textarea name="Current Status" id="Current Status" style="width: 300px; height: 100px;" autocomplete="off"></textarea><br>
+
+                <label for="Amount_Dispute"><b>Amount in Dispute:</b></label>
+                <input class="Amount" type="text" name="Amount Dispute" id="Amount" autocomplete="off">
+                <label for="Amount_Detail"><b>Amount Details:</b></label>
+                <input type="text" name="Amount Detail" id="Amount Details" autocomplete="off"><br><br>
+
+                <label for="Important dates"><b>Important Dates:</b></label>
+                <input type="date" name="Important dates" id="Important_dates">
+
+                <label for="Type of event"><b>Type of Event:</b></label>
+                <input type="text" name="Type of event" id="event_type"><br>
+
+                <label for="Key Issues/Facts"><b>Key Facts (detailed):</b></label><br>
+                <textarea name="Key Issues" id="Key Facts" style="width: 300px; height: 100px;" autocomplete="off"></textarea><br>
+
+                <label for="History"><b>Historical Status:</b></label><br>
+                <textarea name="Historical Status" id="Historical Status" style="width: 300px; height: 100px;"
+                    autocomplete="off"></textarea><br>
+
+                <label for="Additional Notes"><b>Additional Notes:</b></label><br>
+                <textarea name="Additional Notes" id="Additional Notes" style="width: 300px; height: 100px;"
+                    autocomplete="off"></textarea><br>
+
+                <!--Document Links? PDFs are made locally, not stored-->
+                <label for="Document Links"><b>Document Links:</b></label>
+                <input type="url" name="Document Links" id="Document_links"><br>
+
+                <label for="Attorney"><b>In-House Attorney:</b></label>
+                <select class="Attorney" name="Nassau Attorney" id="Attorney" style="display: inline"
+                    multiple="multiple">
+                    <option value="">In-House Attorney</option>
+                </select><br>
+
+                <label for="Counsel"><b>Outside Counsel:</b></label>
+                <input type="text" name="Outside Counsel" id="Counsel" autocomplete="on"><br>
+
+                <label for="Opp Counsel"><b>Opposing Counsel:</b></label>
+                <input type="text" name="Opposing Counsel" id="Opp Counsel" autocomplete="on"><br><br>
+
+                <label for="Budget_Amount"><b>Annual Budget Amount:</b></label>
+                <input class="Amount" type="text" name="Budget_Amount" id="Amount">
+
+                <label for="Budget_year"><b>Year:</b></label>
+                <input type="number" name="Budget_year" id="Budget_year" min="2000" max="2099" step="1" placeholder="Year" autocomplete="off"><br>
+
+                <label for="Life_of_Case"><b>Life of Case Budget:</b></label>
+                <input class="Life_of_Case" type="text" name="Case Budget" id="Life_of_Case"><br><br>
+
+                <label for="Fees_Incurred"><b>Actual Fees Incurred:</b></label><br>
+                <label for="Fees_month/year"><b>Month and Year:</b></label>
+                <input type="month" name="Fees_month/year" id="Fees_month/year"><br>
+                <label for="Fees_invoice"><b>Invoice #:</b></label>
+                <input type="number" name="Fees_invoice" id="Fees_invoice"><br>
+                <label for="Fees_money"><b>Invoice Total:</b></label>
+                <input class="Amount" type="text" name="Fees_money" id="Fees_money"><br>
+                <label for="Fees_total"><b>Total Fees Incurred:</b></label>
+                <input class = "Amount" type="text" name="Fees_total" id="Fees_total"><br><br>
+
+                <label for="Litigation Holds"><b>Litigation Hold:</b></label>
+                <select name="Litigation_Holds" id="Litigation_Holds" multiple="multiple">
+                    <option value=""></option>
+                    <!--<option value="Active">Active</option>
+                <option value="No">No</option>-->
+                </select><br><br>
+
+                <label for="FAS 5"><b>FAS 5:</b></label>
+                <select name="FAS5" id="FAS5" multiple="multiple">
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select><br>
+
+                <label for="Schedule F"><b>Schedule F:</b></label>
+                <select name="Schedule F" id="schedule_F" class="schedule_form-control" multiple="multiple">
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                    <!--Make json of Yes/No, then put state codes as Yes children 3rd-->
+                    <!-- <option value="">Yes/No</option> -->
+                </select><br>
+
+
+
+                <div id="ScheduleF_otherField" style="display:none;">
+                    <label for="State of Residency of Claimant"><b>State of Residency of Claimant:</b></label>
+                    <select name="State of Residency of Claimant" id="state_code" multiple="multiple">
+                        <option value="">State of Residency of Claimant</option>
+                    </select><br>
+                    <label for="Year of Claim for Death or Disability"><b>Year of Claim for Death or
+                            Disability:</b></label>
+                    <input type="year" name="Year of Claim for Death or Disability" id="Year of Claim"><br>
+                    <label for="premium refund Amount"><b>Premium Refund Amount:</b></label>
+                    <input class="Amount" type="text" name="premium refund Amount" id="premium refund amount"><br><br>
+                </div>
+
+
+                <label for="Schedule J"><b>Schedule J:</b></label>
+                <select name="Schedule J" id="Schedule_J" multiple="multiple">
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select><br>
+
+                <label for="Mediation and Settlement"><b>Mediation and Settlement:</b></label><br>
+                <textarea name="Mediation & Settlement" id="Mediation & Settlement" style="width: 300px; height: 100px;"
+                    autocomplete="off"></textarea><br>
+
+
+            </fieldset>
+            <button id=submitFormButton onclick="submitForm()">Submit</button>
+        </div>
+    </form>
+</body>
+
+</html>
+
+<script>
+    $(document).ready(function () {
+
+        load_json_data('Litigation_Holds');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('litigation_hold.json', function (data) {
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'Litigation_Holds') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+                });
+
+            });
+
+        }
+
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        load_json_data('Litigation_Conflict');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('matter_type.json', function (data) {
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'Litigation_Conflict') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                // $('#' + id).html(html_code);
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 150, single: true, placeholder: '--Select--' });
+                });
+                /*
+                 if (id == 'state_federal') {
+                 func();
+                 }*/
+            });
+
+        }
+
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        load_json_data('Attorney');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('in_house_attorney.json', function (data) {
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'Attorney') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                // $('#' + id).html(html_code);
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 110, selectAll: false, placeholder: '--Select--' });
+                });
+                /*
+                 if (id == 'state_federal') {
+                 func();
+                 }*/
+            });
+
+        }
+
+    });
+</script>
+
+
+<!-- Schedule F state code -->
+<script>
+    $(document).ready(function () {
+
+        load_json_data('state_code');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('state_code.json', function (data) {
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'state_code') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                // $('#' + id).html(html_code);
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 110, selectAll: false, placeholder: '--Select--' });
+                });
+                /*
+                 if (id == 'state_federal') {
+                 func();
+                 }*/
+            });
+
+        }
+
+    });
+</script>
+
+
+
+
+<script>
+    $(document).ready(function () {
+
+        load_json_data('party');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('nassau_party.json', function (data) {
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'party') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                // $('#' + id).html(html_code);
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 370, single: true, placeholder: '--Select--' });
+                });
+                /*
+                if (id == 'state_federal') {
+                func();
+                }*/
+            });
+
+        }
+
+    });
+</script>
+
+
+
+<!-- Dynamic dropdown function for Jurisdiction -->
+<script>
+    $(document).ready(function () {
+
+        load_json_data('state');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('state_level_court.json', function (data) {
+
+                // html_code += '<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'state') {
+                        if (value.parent_id == '0') {//populates states
+                            html_code += '<option value="' + value.id + '">' + value.name + '</option>';
+                        }
+                    }
+                    else if (id == 'court') {//populates courts. Get value from leaf node
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                    else {//populates fed/state
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.id + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 300, single: true, placeholder: '--Select--' });
+                });
+
+
+                if (id == 'state_federal') {
+                    func();
+                }
+
+            });
+
+        }
+
+        $(document).on('change', '#state', function () {
+            var state_id = $(this).val();
+            if (state_id != '') {
+
+                var s_f_Name = $("#state_federal :selected").text();
+
+                var updateFunc = function () {
+
+                    $("#state_federal option").each(function () {
+                        if ($(this).text() == s_f_Name) {
+                            $(this).attr('selected', 'selected');
+                        }
+                    });
+
+                    var state_federal_id = $("#state_federal").val();
+                    if (state_federal_id != '') {
+                        load_json_data('court', state_federal_id);
+                    }
+                    else {
+                        $('#court').html('<option value="">Select court</option>');
+                    }
+
+                }
+
+                load_json_data('state_federal', state_id, updateFunc);
+            }
+            else {
+                $('#state_federal').html('<option value="">Select state/federal</option>');
+                $('#court').html('<option value="">Select court</option>');
+            }
+        });
+        $(document).on('change', '#state_federal', function () {
+            var state_federal_id = $(this).val();
+            if (state_federal_id != '') {
+                load_json_data('court', state_federal_id);
+            }
+            else {
+                $('#court').html('<option value="">Select court</option>');
+            }
+        });
+    });
+</script>
+
+
+
+<!-- autofit content -->
+<script>
+    $(document).on('change keyup keydown paste cut', 'textarea', function () {
+        $(this).height(0).height(this.scrollHeight);
+    }).find('textarea').change();
+</script>
+
+
+<!-- format case budget -->
+<script>
+    function formatCaseBudget(t) {
+        var $this = $(t);
+        var input = $this.val();
+        var input = input.replace(/[\D\s\._\-]+/g, "");
+        input = input ? parseInt(input, 10) : 0;
+        $this.val(function () {
+            return (input === 0) ? "" : input.toLocaleString("en-US");
+        });
+    }
+    var $input = $(".Life_of_Case");
+    $input.on("keyup", function (event) {
+
+
+        // When user select text in the document, also abort.
+        var selection = window.getSelection().toString();
+        if (selection !== '') {
+            return;
+        }
+
+        // When the arrow keys are pressed, abort.
+        if ($.inArray(event.keyCode, [38, 40, 37, 39]) !== -1) {
+            return;
+        }
+
+
+        var $this = $(this);
+
+        // Get the value.
+        var input = $this.val();
+
+        var input = input.replace(/[\D\s\._\-]+/g, "");
+        input = input ? parseInt(input, 10) : 0;
+
+        $this.val(function () {
+            return (input === 0) ? "" : "$" + input.toLocaleString("en-US");
+        });
+    });
+
+</script>
+
+<!-- format amount -->
+<script>
+    function formatAmount(t) {
+        var $this = $(t);
+        var input = $this.val();
+        var input = input.replace(/[\D\s\._\-]+/g, "");
+        input = input ? parseInt(input, 10) : 0;
+        $this.val(function () {
+            return (input === 0) ? "" : input.toLocaleString("en-US");
+        });
+    }
+    var $input = $(".Amount");
+    $input.on("keyup", function (event) {
+
+
+        // When user select text in the document, also abort.
+        var selection = window.getSelection().toString();
+        if (selection !== '') {
+            return;
+        }
+
+        // When the arrow keys are pressed, abort.
+        if ($.inArray(event.keyCode, [38, 40, 37, 39]) !== -1) {
+            return;
+        }
+
+
+        var $this = $(this);
+
+        // Get the value.
+        var input = $this.val();
+
+        var input = input.replace(/[\D\s\._\-]+/g, "");
+        input = input ? parseInt(input, 10) : 0;
+
+        $this.val(function () {
+            return (input === 0) ? "" : "$" + input.toLocaleString("en-US");
+        });
+    });
+
+</script>
+
+
+<!-- Load json into Category -->
+<script>
+    $(document).ready(function () {
+
+        load_json_data('Category');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('category.json', function (data) {
+                //console.log('test');
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'Category') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 250, selectAll: false, placeholder: '--Select--' });
+                });
+
+            });
+
+        }
+
+    });
+</script>
+
+<!-- Load json into SubCategory -->
+<script>
+    $(document).ready(function () {
+
+        load_json_data('sub_Category');
+
+        function load_json_data(id, parent_id, func) {
+            var html_code = '';
+            $.getJSON('subCategory.json', function (data) {
+                html_code += '';//'<option value="">Select ' + id + '</option>';
+                $.each(data, function (key, value) {
+                    if (id == 'sub_Category') {
+                        if (value.parent_id == '0') {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+                    }
+                    else {
+                        if (value.parent_id == parent_id) {
+                            html_code += '<option value="' + value.name + '">' + value.name + '</option>';
+                        }
+
+                    }
+                });
+                $('#' + id).html(html_code).promise().done(function () {
+                    this.multipleSelect({ width: 250, selectAll: false, placeholder: '--Select--' });
+                });
+
+            });
+
+        }
+
+    });
+</script>
+
+<!-- multiselect -->
+<!-- checkbox dropdown -->
+<script type="text/javascript">
+    $(function () {
+
+        $('#state_federal').multipleSelect({ width: 160, single: true, placeholder: '--Select--' });
+        $('#court').multipleSelect({ width: 300, single: true, placeholder: '--Select--' });
+
+        $('#Significant').multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+        $('#Plaintiff_Defendant').multipleSelect({ width: 110, single: true, placeholder: '--Select--' });
+
+        $('#FAS5').multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+
+        $('#state_code').multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+        $('#schedule_F').multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+
+        $('#Schedule_J').multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+        $('#status').multipleSelect({ width: 100, single: true, placeholder: '--Select--' });
+
+
+
+    });
+</script>
+
+
+<!-- show ScheduleF_otherField upon on user's selection -->
+<script>
+    $('#schedule_F').on('change', function () {
+        if ($(this).val() == "Yes") {
+            $("#ScheduleF_otherField").show()
+        }
+        else {
+            $("#ScheduleF_otherField").hide()
+        }
+    });
+
+</script>
+
+<!-- auto resize WIDTH input text box -->
+<script>
+    function resizeInput() {
+        $(this).attr('size', $(this).val().length);
+    }
+
+
+    $('input[type="text"]')
+        // event handler
+        .keyup(resizeInput)
+        // resize on page load
+        .each(resizeInput);
+
+    $('input[type="url"]')
+        // event handler
+        .keyup(resizeInput)
+        // resize on page load
+        .each(resizeInput);
+
+   
+</script>
+
+
+

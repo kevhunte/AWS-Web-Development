@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js" integrity="sha384-NaWTHo/8YCBYJ59830LTz/P4aQZK1sS0SneOgAvhsIl3zBu8r9RevNg5lHCHAuQ/" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.min.js"></script>
+    <script src="zipcelx.js"></script>
+    <title>Search Page</title>
+</head>
+<style type="text/css" id="">
+    p {
+        margin: 0px;
+    }
+
+    h1 {
+        margin: 0px;
+    }
+
+    h2 {
+        margin: 0px;
+    }
+
+    h3 {
+        margin: 0px;
+    }
+
+    table, th, td
+    {
+        border: solid 1px rgb(0, 102, 164);
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    tr {
+        border: solid 1px rgb(0, 102, 164);
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        font-weight:bold;
+    }
+
+</style>
+<style type="text/css">
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0px;
+    }
+
+    body {
+        background-color: transparent;
+        transform: perspective(1400px) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        transform-style: preserve-3d;
+    }
+
+    .banner {
+        position: absolute;
+        background-image: none;
+        background-color: rgb(0, 102, 164);
+        height: 75px;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+    }
+
+    .header {
+        position: absolute;
+        font-size: 32px;
+        font-weight: 700;
+        text-align: center;
+        height: 46px;
+        transform-origin: 357.5px 28.2787px 0px;
+        top: 85px;
+        width: 200px;
+        left: 40%;
+    }
+
+    .icon {
+        position: absolute;
+        height: 48px;
+        top: 85px;
+        width: 48px;
+        left: 80%;
+    }
+
+    .BigSearchBar {
+        position: absolute;
+        top: 165px;
+        font-weight: 700;
+        font-size: 18.72px;
+        height: 30px;
+        left: 70px;
+        width: 90%;
+    }
+
+    .dataTable {
+        position: absolute;
+        left: 70px;
+        top: 470px;
+        max-width: 90%;
+    }
+
+    .pdfButton {
+        position: absolute;
+        left: 140px;
+        top: 439px;
+    }
+
+    .excelButton {
+        position: absolute;
+        left: 280px;
+        top: 439px;
+    }
+
+    .master_font{
+        font-family: "Calibri","Arial";
+    }
+
+
+</style>
+<script type="text/javascript">
+
+var value;
+var organizedList;
+var excelList = [];
+
+function generatePDF(){
+
+    var checkNums = [];
+
+    for(var i = 0; i < document.getElementsByClassName("rowCheckbox").length; i++){
+        var specificCheckBox = document.getElementsByClassName("rowCheckbox")[i];
+        if(specificCheckBox.checked){
+            checkNums.push(parseInt(specificCheckBox.id.split('_').pop() - 1));
+        }
+    }
+
+    if(checkNums.length === 0){
+        alert("Please select at least one case to generate a report.");
+        return;
+    }
+
+    var today = new Date();
+    var time = new Date().toLocaleTimeString();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var yyyy = today.getFullYear();
+
+    today = mm + '/' + dd + '/' + yyyy + ' at ' + time;
+    var name = prompt("Enter report name");
+
+    while(name.length > 50){
+        name = prompt('Please enter a name no longer than 50 characters.')
+    }
+
+    if(name === ''){
+        name = "Litigation Case Report";
+    }
+
+    var doc = new jsPDF();
+    var test = JSON.parse(value);
+
+    var pageWidth = 8.5,
+	margin = 0.5,
+    maxLineWidth = pageWidth - margin * 2;
+
+    for(var j = 0; j < checkNums.length; j++){
+        doc.setFontSize(18);
+        doc.text(20, 20, name);
+        doc.setFontSize(14);
+        doc.text(20, 30, 'Report generated on: ' + today);
+        doc.text(20, 40, test['Case ' + (j+1)]['FullName']);
+        var checkedBoxRow = document.getElementsByName("rowToggle")[checkNums[j]];
+        doc.setFontSize(12);
+        var textLines = doc.splitTextToSize(checkedBoxRow.innerText, 180);
+        doc.text(20, 50, textLines);
+
+        if(j !== checkNums.length - 1){
+            doc.addPage();
+        }
+    }
+
+    doc.save(name + ' ' + mm + '/' + dd + '/' + yyyy + '.pdf');
+
+    return;
+
+}
+
+function generateExcel(){
+
+    var checkNums = [];
+    var testData = [];
+
+    for(var i = 0; i < document.getElementsByClassName("rowCheckbox").length; i++){
+        var specificCheckBox = document.getElementsByClassName("rowCheckbox")[i];
+        if(specificCheckBox.checked){
+            checkNums.push(parseInt(specificCheckBox.id.split('_').pop() - 1));
+        } else {
+            excelList.splice(i, 1);
+        }
+    }
+
+    if(checkNums.length === 0){
+        alert("Please select at least one case to create an excel sheet.");
+        return;
+    }  
+
+    var excelName = prompt("Enter sheet name");
+
+    while(name.length > 50){
+        excelName = prompt('Please enter a name no longer than 50 characters.')
+    }
+
+    if(excelName === ''){
+        excelName = 'Litigation Case Sheet';
+    }
+
+    var today = new Date();
+    var time = new Date().toLocaleTimeString();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+
+    today = mm + '/' + dd + '/' + yyyy;
+    excelName += ' ' + today;
+
+    for(var i = 0; i < checkNums.length; i++){
+        var tempJSON = {};
+        var tempJSON2 = {};
+        var tempArr = [];
+        tempJSON['value'] = 'Case ' + (i+1);
+        tempJSON['type'] = 'string';
+        tempArr.push(tempJSON);
+        tempJSON2['value'] = ' ';
+        tempJSON2['type'] = 'string';
+        tempArr.push(tempJSON2);
+        testData.push(tempArr);
+        for(var j = 0; j < excelList[i][0].length; j += 2){
+            var tempJSON = {};
+            var tempJSON2 = {};
+            var tempArr = [];
+            tempJSON['value'] = excelList[i][0][j];
+            tempJSON['type'] = 'string';
+            tempArr.push(tempJSON);
+            if(!excelList[i][0][j+1]){
+                tempJSON2['value'] = " ";
+            } else {
+                tempJSON2['value'] = excelList[i][0][j+1];
+            }
+            tempJSON2['type'] = 'string';
+            tempArr.push(tempJSON2);
+            testData.push(tempArr);
+        }
+        var tempJSON = {};
+        var tempJSON2 = {};
+        var tempArr = [];
+        tempJSON['value'] = ' ';
+        tempJSON['type'] = 'string';
+        tempArr.push(tempJSON);
+        tempJSON2['value'] = ' ';
+        tempJSON2['type'] = 'string';
+        tempArr.push(tempJSON2);
+        testData.push(tempArr);
+    }
+
+    const config = {
+        filename: excelName,
+            sheet: {
+                data: testData
+            }
+    };
+
+    zipcelx(config);
+    return;
+
+};
+
+function validateDate(form){
+
+    var dateCheck = 0;
+    var dates = [];
+
+    for(var i = 0; i < form.length; i++){
+        if(form.elements[i].type === "date"){
+            if(form.elements[i].value === ""){
+                dateCheck++;
+            }
+            dates.push(form.elements[i].value);
+        }
+    }
+
+    var startDateFile = new Date(dates[0]);
+    var endDateFile = new Date(dates[1]);
+    var startDateClose = new Date(dates[2]);
+    var endDateClose = new Date(dates[3]);
+
+    if(dateCheck === 4){
+        return dateCheck = 0;
+    }
+
+    if((dates[0] && !dates[1]) || (!dates[0] && dates[1])){
+        alert("The 'From' and 'to' date fields must both have a date in order to search by filing date.")
+        return dateCheck++;
+    } else if(startDateFile > endDateFile){
+        alert("The 'From' date field must be less than the 'to' date field to search by filing date.")
+        return dateCheck++;
+    }
+
+    if((dates[2] && !dates[3]) || (!dates[2] && dates[3])){
+        alert("The 'From' and 'to' date fields must both have a date in order to search by closing date.")
+        return dateCheck++;
+    } else if(startDateClose > endDateClose){
+        alert("The 'From' date field must be less than the 'to' date field to search by closing date.")
+        return dateCheck++;
+    }
+
+    return dateCheck;
+
+};
+
+function generateURI(){
+
+        var searchURI = '';
+
+        var form = document.getElementById("requestForm");
+        var toAdd = [];
+
+        for(var i = 0; i < form.length - 1; i++){
+            if(toAdd.indexOf(form.elements[i].name) === -1){
+                toAdd.push(form.elements[i].name);
+                toAdd.push('=');
+            }
+            if(toAdd.indexOf(form.elements[i].value) === -1 || !form.elements[i].value){
+                if(form.elements[i].type === "radio" && form.elements[i].checked === false){
+                    if(form.elements[i+1].checked === false){
+                        toAdd.push('&');
+                    }
+                } else if (!form.elements[i].value){
+                    toAdd.push('&');
+                } else {
+                    toAdd.push(form.elements[i].value);
+                    toAdd.push('&');
+                }
+            }
+
+        }
+
+        var finalURI = (searchURI + toAdd.join('')).replace(/&&/g, "&");
+        return finalURI;
+
+    };
+
+function submitForm() {
+        var checkDate = validateDate(document.getElementById("requestForm"));
+        if(checkDate !== 0){
+            return;
+        }
+        var formatURI = generateURI();
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () { // should refresh info into webpage
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                // change content from div
+                var res = xhr.responseText;
+                window.value = res;
+                CreateTableFromJSON(res);
+            }
+        }
+        xhr.open("GET", formatURI, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.send();
+};
+
+function expandDetails(){
+
+    $(".toggle").click(function(e){
+        e.preventDefault();
+        $('.cat'+$(this).attr('data-prod-cat')).toggle();
+    });
+
+};
+
+function getHeaders(myBooks){
+
+var col = [];
+
+for(var i = 0; i < Object.keys(myBooks[0]).length; i++){
+    for(var key in myBooks[0]){
+        for(var key1 in myBooks[0][key]){
+                if(key1 === 'Current Status' && col.indexOf(key1) === -1){
+                    col.push(key1);
+                } else if(key1 === 'Filed' && col.indexOf(key1) === -1){
+                    col.unshift(key1);
+                } else if(key1 === 'FullName' && col.indexOf(key1) === -1){
+                    col.unshift(key1);
+                } else if(key1 === 'Party' && col.indexOf(key1) === -1){
+                    col.push(key1);
+                } else if(key1 === 'Sub Category' && col.indexOf(key1) === -1){
+                    col.push(key1);
+                } else if(key1 === 'Jurisdiction' && col.indexOf(key1) === -1){
+                    col.push(key1);
+                }
+            }
+        }
+    }
+
+    //Swap order of last two
+    var temp = col[col.length - 1];
+    col[col.length - 1] = col[col.length - 2];
+    col[col.length - 2] = temp;
+
+    return col;
+
+};
+
+function CreateTableFromJSON(serverResponse) {
+
+if(serverResponse.length < 6 || serverResponse.includes("errorMessage")){
+    alert("No cases matched.");
+    return;
+}
+
+document.getElementById("pdf").style = 'visible';
+document.getElementById("excel").style = 'visible';
+
+var myBooks = [];
+myBooks.push(JSON.parse(serverResponse));
+//need to json parse first before this
+
+const col = getHeaders(myBooks);
+
+// CREATE DYNAMIC TABLE.
+var table = document.createElement("table");
+// CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.
+var tr = table.insertRow(-1);              // TABLE ROW.
+
+for (var i = 0; i < col.length; i++) {
+    var th = document.createElement("th");     // TABLE HEADER.
+    
+    if(col[i] === 'FullName'){
+        th.innerHTML = 'Full Case Name';
+    } else if(col[i] === 'Filed'){
+        th.innerHTML = 'Filing Date';
+    } else if(col[i] === 'Party'){
+        th.innerHTML = 'Nassau Party';
+    } else if(col[i] === 'Sub Category'){
+        th.innerHTML = 'Subcategory';
+    } else {
+        th.innerHTML = col[i];
+    }
+
+    tr.appendChild(th);
+}
+
+//Checkbox in header
+var th = document.createElement("th");
+var formCheckboxAll = document.createElement("input");
+formCheckboxAll.setAttribute("class", "rowCheckboxAll");
+formCheckboxAll.setAttribute("type", "checkbox");
+formCheckboxAll.setAttribute("id", "formCaseAll");
+formCheckboxAll.setAttribute("onclick", "checkAllBoxes()");
+th.innerHTML = "Select All" + "<br></br>";
+th.append(formCheckboxAll);
+tr.appendChild(th);
+
+
+// ADD JSON DATA TO THE TABLE AS ROWS.
+for (var i = 0; i < Object.keys(myBooks[0]).length; i++) {
+    tr = table.insertRow(-1);
+    tr.setAttribute("class", "tableRow");
+    for (var j = 0; j < col.length; j++) {
+        var tabCell = tr.insertCell(-1);
+        tabCell.setAttribute("href", "#");
+        tabCell.setAttribute("class", "toggle");
+        tabCell.setAttribute("onclick", "expandDetails()");
+        tabCell.setAttribute("data-prod-cat", (i + 1));
+        if(!myBooks[0]['Case ' + (i+1)][col[j]]){
+            tabCell.innerHTML = ' ';
+        } else if(col[j] === 'Sub Category'){
+            var formatSub = myBooks[0]['Case ' + (i+1)][col[j]].toString();
+            tabCell.innerHTML = formatSub.replace(/,/g, ", ");
+        } else {
+            tabCell.innerHTML = myBooks[0]['Case ' + (i+1)][col[j]];
+        }
+    }
+
+        var reportCell = tr.insertCell(-1);
+        var formCheckbox = document.createElement("input");
+        formCheckbox.setAttribute("class", "rowCheckbox");
+        formCheckbox.type = "checkbox";
+        formCheckbox.setAttribute("id", "formCase_" + (i+1));
+        reportCell.append(formCheckbox);
+
+        tr = table.insertRow(-1);
+        tr.innerHTML = populateDetails(i);
+        tr.setAttribute("name", "rowToggle");
+        tr.setAttribute("class", "cat" + (i+1));
+        tr.setAttribute("style", "display:none");
+        
+    }
+
+// FINALLY ADD THE NEWLY CREATED TABLE WITH JSON DATA TO A CONTAINER.
+var divContainer = document.getElementById("showData");
+divContainer.innerHTML = "";
+divContainer.appendChild(table);
+
+}
+
+function checkAllBoxes() {
+    var checkAll = document.getElementById("formCaseAll");
+    
+    for(var i = 0; i < document.getElementsByClassName("rowCheckbox").length; i++){
+        var specificCheckBox = document.getElementsByClassName("rowCheckbox")[i];
+        if(checkAll.checked){
+            specificCheckBox.checked = checkAll.checked;
+        } else if(checkAll.checked === false){
+            specificCheckBox.checked = checkAll.checked;
+        }
+    }
+
+};
+
+function populateDetails(rowNum){
+
+var details = '';
+var forExcel = [];
+var forExcelFinal = [];
+var jsonDetails = JSON.parse(value);
+
+details += ('Full Case Name: '.bold() + jsonDetails['Case ' + (rowNum+1)]['FullName'] + '\n' + '<br>');
+forExcel.push('Full Case Name');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['FullName']);
+
+details += ('Jurisdiction: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Jurisdiction'] + '\n' + '<br>');
+forExcel.push('Jurisdiction');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Jurisdiction']);
+
+details += ('Filing Date: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Filed'] + '\n' + '<br>');
+forExcel.push('Filed');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Filed']);
+
+details += ('Case Status: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Current Status'] + '\n' + '<br>');
+forExcel.push('Current Status');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Current Status']);
+
+details += ('Closing Date: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Close Date'] + '\n' + '<br>');
+forExcel.push('Closing Date');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Close Date']);
+
+details += ('Resolution: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Resolution'] + '\n' + '<br>');
+forExcel.push('Resolution');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Resolution']);
+
+details += '\n' + '<br>';
+
+details += ('Nassau Party: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Party'] + '\n' + '<br>');
+forExcel.push('Nassau Party');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Party']);
+
+details += ('Plaintiff/Defendant: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Plaintiff_Defendant'] + '\n' + '<br>');
+forExcel.push('Plaintiff/Defendant');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Plaintiff_Defendant']);
+
+details += ('Matter Type: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Matter Type'] + '\n' + '<br>');
+forExcel.push('Matter Type');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Matter Type']);
+
+details += ('Category: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Category'] + '\n' + '<br>');
+forExcel.push('Category');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Category']);
+
+details += ('Subcategory: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Sub Category'] + '\n' + '<br>');
+forExcel.push('Subcategory');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Sub Category']);
+
+details += '\n' + '<br>';
+
+details += ('Full Case Description: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Description'] + '\n' + '<br>');
+forExcel.push('Full Case Description');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Description']);
+
+details += '\n' + '<br>';
+
+details += ('Current Status: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Current Status'] + '\n' + '<br>');
+forExcel.push('Current Status');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Current Status']);
+
+details += '\n' + '<br>';
+
+details += ('Key Facts (Detailed): '.bold() + jsonDetails['Case ' + (rowNum+1)]['Key Issues'] + '\n' + '<br>');
+forExcel.push('Key Facts (Detailed)');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Key Issues']);
+
+details += '\n' + '<br>';
+
+details += ('Nassau Attorney: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Nassau Attorney'] + '\n' + '<br>');
+forExcel.push('Nassau Attorney');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Nassau Attorney']);
+
+details += ('Outside Counsel: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Outside Counsel'] + '\n' + '<br>');
+forExcel.push('Outside Counsel');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Outside Counsel']);
+
+details += ('Business Contact: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Business_Contact'] + '\n' + '<br>');
+forExcel.push('Business Contact');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Business_Contact']);
+
+details += '\n' + '<br>';
+
+details += ('Significant Matter: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Significant'] + '\n' + '<br>');
+forExcel.push('Significant Matter');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Significant']);
+
+details += ('Amount Dispute: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Amount Dispute'] + '\n' + '<br>');
+forExcel.push('Amount Dispute');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Amount Dispute']);
+
+details += ('Amount Details: '.bold() + jsonDetails['Case ' + (rowNum+1)]['Amount Detail'] + '\n' + '<br>');
+forExcel.push('Amount Details');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['Amount Detail']);
+
+details += ('Policy Number: '.bold() + jsonDetails['Case ' + (rowNum+1)]['policyNo'] + '\n' + '<br>');
+forExcel.push('Policy Number');
+forExcel.push(jsonDetails['Case ' + (rowNum+1)]['policyNo']);
+
+details = details.replace(/undefined/g, " ");
+details = details.replace(/,/g, ", ");
+forExcelFinal.push(forExcel);
+window.excelList.push(forExcelFinal);
+window.organizedList = details;
+return details;
+
+};
+
+</script>
+
+<body>
+    <div class="banner" style="box-shadow: lightgrey 0px 1em 1em;"></div>
+    <p class="header">Case Search</p>
+    <a href="" id="Nsre_icon" class="icon">
+        <img src="assets/nsre_icon.png" class="nsre_icon"></a>
+    <form id="requestForm" onsubmit="event.preventDefault(); return submitForm();" enctype="multipart/form-data" class="BigSearchBar" name="searchForm">
+        <label for="GET-name">Search for Keyword:</label><br>
+        <input id="GET-name" type="text" name="Keyword" style="width: 300px;" placeholder="Doe Vs. US"
+            autocomplete="off"><br>
+        <label>Case Status:</label>
+        <input type="radio" name="Open/Closed" value="Open" checked>Open
+        <input type="radio" name="Open/Closed" value="Closed">Closed <br><br>
+        <label>---Pick a Search Parameter---</label><br><br>
+        <label>By Filing Date: From</label>
+        <input type="date" name="fromFilingDate">
+        <label style="padding-left: 1px;">to</label>
+        <input type="date" name="toFilingDate"><br>
+        <label style="padding-left: 1em;">By Closing Date: From</label>
+        <input type="date" name="fromClosingDate">
+        <label style="padding-left: 1px;">to</label>
+        <input type="date" name="toClosingDate"><br>
+        
+        <label style="padding-left: 2em;">Amount in Dispute:</label>
+        <input id="Amount" type="text" name="Amount_Dispute">
+        <input type="radio" name="Less/Greater" value="less">Less Than
+        <input type="radio" name="Less/Greater" value="greater">Greater Than<br>
+        <label>Plaintiff or Defendant:</label>
+        <input type="radio" name="Plaintiff/Defendant" value="Plaintiff">Plaintiff
+        <input type="radio" name="Plaintiff/Defendant" value="Defendant">Defendant<br>
+        <label style="padding-left: 2em;">Policy Number:</label>
+        <input type="text" name="policyNo"><br>
+        <label>FAS 5:</label>
+        <input type="radio" name="FAS_5" value="Yes">Yes
+        <input type="radio" name="FAS_5" value="No">No
+        <label style="padding-left: 2em;">Schedule F:</label>
+        <input type="radio" name="Schedule_F" value="Yes">Yes
+        <input type="radio" name="Schedule_F" value="No">No
+        <label style="padding-left: 2em;">Schedule J:</label>
+        <input type="radio" name="Schedule_J" value="Yes">Yes
+        <input type="radio" name="Schedule_J" value="No">No        
+        <label style="padding-left: 2em;">Significant Matter:</label>
+        <input type="radio" name="Significant" value="Yes">Yes
+        <input type="radio" name="Significant" value="No">No<br>
+        <input type="Submit" value="Submit">
+    </form>
+    <div class="dataTable" id="showData"></div>
+    <button id="pdf" style="visibility: hidden" class="pdfButton" type="button" onclick="generatePDF();">Create PDF Report</button>
+    <button id="excel" style="visibility: hidden" class="excelButton" type="button" onclick="generateExcel();">Create Excel Sheet</button>
+
+</body>
+</html>
